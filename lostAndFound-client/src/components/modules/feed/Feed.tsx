@@ -28,7 +28,7 @@ export function Feed({ posts, infinite = false, emptyTitle, emptyDescription }: 
     enabled: infinite && hasMore && !error,
   })
 
-  if (posts.length === 0) {
+  if (!infinite && posts.length === 0) {
     return (
       <div className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center">
         <InboxIcon className="mx-auto h-8 w-8 text-slate-400" />
@@ -38,15 +38,31 @@ export function Feed({ posts, infinite = false, emptyTitle, emptyDescription }: 
     )
   }
 
+  const loadingInitial = posts.length === 0 && isLoadingMore
+
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} />
-      ))}
+      {loadingInitial ? (
+        <div className="space-y-4" aria-live="polite">
+          <span className="sr-only">Loading posts</span>
+          <PostSkeleton />
+          <PostSkeleton />
+        </div>
+      ) : posts.length > 0 ? (
+        posts.map((post) => (
+          <PostCard key={post.id} post={post} />
+        ))
+      ) : error ? null : (
+        <div className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center">
+          <InboxIcon className="mx-auto h-8 w-8 text-slate-400" />
+          <h3 className="mt-3 text-[17px] font-semibold text-slate-900">{emptyTitle}</h3>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-600">{emptyDescription}</p>
+        </div>
+      )}
 
       {infinite && (
         <>
-          {isLoadingMore && (
+          {!loadingInitial && isLoadingMore && (
             <div className="space-y-4" aria-live="polite">
               <span className="sr-only">Loading more posts</span>
               <PostSkeleton />
@@ -71,7 +87,7 @@ export function Feed({ posts, infinite = false, emptyTitle, emptyDescription }: 
             </div>
           )}
 
-          {!hasMore && !isLoadingMore && !error && (
+          {!hasMore && !isLoadingMore && !error && posts.length > 0 && (
             <p className="flex items-center justify-center gap-2 py-6 text-sm text-slate-500">
               <CheckCircle2Icon className="h-4 w-4 text-emerald-600" />
               You are all caught up on nearby reports.

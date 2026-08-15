@@ -26,6 +26,7 @@ const updatePostSchema = z.object({
   body: z.string().min(1).max(5000).optional(),
   reward: z.string().max(100).optional().nullable(),
   status: statusSchema.optional(),
+  removeImage: z.boolean().optional(),
 });
 
 const createCommentSchema = z.object({

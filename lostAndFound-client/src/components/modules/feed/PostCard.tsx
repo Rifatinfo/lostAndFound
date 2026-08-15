@@ -1,5 +1,5 @@
 "use client";
-import  { useState } from 'react'
+import  { useEffect, useRef, useState } from 'react'
 import { formatDistanceToNowStrict } from 'date-fns'
 import {
   BadgeCheckIcon,
@@ -8,13 +8,16 @@ import {
   MapPinIcon,
   MessageCircleIcon,
   MoreHorizontalIcon,
+  PencilIcon,
   Share2Icon,
   ThumbsUpIcon,
+  Trash2Icon,
 } from 'lucide-react'
 
 import { CommentThread } from './CommentThread'
 import { CommentComposer } from './CommentComposer'
 import { usePosts } from '../contexts/PostContexts';
+import { useComposer } from '../contexts/ComposerProvider';
 import { Avatar } from '../Avatar';
 import { countComments } from '../contexts/PostContexts';
 import { Post } from '@/types/post';
@@ -24,12 +27,50 @@ interface PostCardProps {
 }
 
 export function PostCard({ post }: PostCardProps) {
-  const { toggleHelpful, toggleSave, markReunited, addComment } = usePosts()
+  const { toggleHelpful, toggleSave, markReunited, addComment, deletePost } = usePosts()
+  const { openEdit } = useComposer()
   const [showComments, setShowComments] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false)
+        setConfirmingDelete(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        setConfirmingDelete(false)
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [menuOpen])
 
   const isLost = post.kind === 'lost'
   const timeAgo = formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: false })
   const commentCount = countComments(post.comments)
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    try {
+      await deletePost(post.id)
+    } finally {
+      setDeleting(false)
+      setMenuOpen(false)
+      setConfirmingDelete(false)
+    }
+  }
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white">
@@ -62,13 +103,81 @@ export function PostCard({ post }: PostCardProps) {
         >
           {isLost ? 'Lost' : 'Found'}
         </span>
-        <button
-          type="button"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
-          aria-label={`More options for ${post.itemName}`}
-        >
-          <MoreHorizontalIcon className="h-5 w-5" />
-        </button>
+        {post.isMine ? (
+          <div ref={menuRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen((v) => !v)
+                setConfirmingDelete(false)
+              }}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              aria-label={`More options for ${post.itemName}`}
+              className="grid h-8 w-8 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-100"
+            >
+              <MoreHorizontalIcon className="h-5 w-5" />
+            </button>
+
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-9 z-20 w-52 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+              >
+                {confirmingDelete ? (
+                  <>
+                    <p className="px-3 py-2 text-sm font-medium text-slate-700">
+                      Delete this post? This can&apos;t be undone.
+                    </p>
+                    <div className="flex gap-1 px-2 pb-2">
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex-1 rounded-md bg-rose-600 px-2 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-rose-700 disabled:bg-rose-600/60"
+                      >
+                        {deleting ? 'Deleting…' : 'Delete'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingDelete(false)}
+                        className="flex-1 rounded-md bg-slate-100 px-2 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        openEdit(post)
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                    >
+                      <PencilIcon className="h-4 w-4 text-slate-500" />
+                      Edit post
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setConfirmingDelete(true)}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-rose-700 transition-colors hover:bg-rose-50"
+                    >
+                      <Trash2Icon className="h-4 w-4 text-rose-500" />
+                      Delete post
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <span className="shrink-0" aria-hidden="true" />
+        )}
       </header>
 
       <div className="px-4 pt-3">

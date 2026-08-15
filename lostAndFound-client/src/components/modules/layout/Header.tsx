@@ -3,15 +3,21 @@ import {
   BellIcon,
   HeartHandshakeIcon,
   HomeIcon,
+  LogOutIcon,
   MenuIcon,
   PackageSearchIcon,
   PlusIcon,
   SearchIcon,
+  SettingsIcon,
+  UserRoundIcon,
 } from 'lucide-react'
+import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { useComposer } from '../contexts/ComposerProvider';
 import { NavLink } from './NavLink';
 import { Avatar } from '../Avatar';
-import { useCurrentUser } from '../../providers/SessionProvider';
+import { useCurrentUser, useSession } from '../../providers/SessionProvider';
+import { logoutUser } from '@/services/auth/logoutUser';
 
 
 const tabs = [
@@ -28,6 +34,27 @@ interface HeaderProps {
 export function Header({ onOpenMenu }: HeaderProps) {
   const { openComposer } = useComposer()
   const currentUser = useCurrentUser()
+  const { user, isLoading } = useSession()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const onDown = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 h-14 border-b border-slate-200 bg-white">
@@ -106,13 +133,75 @@ export function Header({ onOpenMenu }: HeaderProps) {
               3
             </span>
           </button>
-          <NavLink
-            to="/profile"
-            aria-label="Your profile"
-            className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
-          >
-            <Avatar author={currentUser} />
-          </NavLink>
+          <div ref={menuRef} className="relative">
+            {user && !isLoading ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((open) => !open)}
+                  aria-label="Your account"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                >
+                  <Avatar author={currentUser} />
+                </button>
+
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    aria-label="Account menu"
+                    className="absolute right-0 top-full z-40 mt-2 w-64 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+                  >
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-slate-900">
+                        {user.name || 'FoundIt member'}
+                      </p>
+                      <p className="truncate text-xs text-slate-500">{user.email}</p>
+                    </div>
+
+                    <Link
+                      href="/profile"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    >
+                      <UserRoundIcon className="h-4 w-4 text-slate-500" />
+                      My Profile
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                    >
+                      <SettingsIcon className="h-4 w-4 text-slate-500" />
+                      Settings
+                    </Link>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => void logoutUser()}
+                      className="flex w-full items-center gap-3 border-t border-slate-100 px-4 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                    >
+                      <LogOutIcon className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <NavLink
+                to="/login"
+                aria-label="Sign in"
+                className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+              >
+                <Avatar author={currentUser} />
+              </NavLink>
+            )}
+          </div>
         </div>
       </div>
     </header>

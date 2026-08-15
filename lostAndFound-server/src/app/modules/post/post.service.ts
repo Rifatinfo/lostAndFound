@@ -1,5 +1,7 @@
 import { PostKind, PostStatus } from "@prisma/client";
 import { Request } from "express";
+import path from "path";
+import fs from "fs/promises";
 import prisma from "../../../shared/prisma";
 import ApiError from "../../errors/ApiError";
 import { StatusCodes } from "http-status-codes";
@@ -340,7 +342,13 @@ const createPost = async (req: Request) => {
   };
 };
 
-const updatePost = async (id: string, payload: any, session: any) => {
+const removeImageFile = async (imageUrl: string | null) => {
+  if (!imageUrl || !imageUrl.startsWith("/uploads/")) return;
+  await fs.unlink(path.join(process.cwd(), imageUrl)).catch(() => {});
+};
+
+const updatePost = async (id: string, req: Request) => {
+  const session = (req as any).user;
   const me = await getMeUser(session);
 
   const existing = await prisma.post.findUnique({ where: { id } });
@@ -351,7 +359,7 @@ const updatePost = async (id: string, payload: any, session: any) => {
     throw new ApiError(StatusCodes.FORBIDDEN, "You can only edit your own posts");
   }
 
-  const parsed = PostValidation.updatePostSchema.safeParse(payload);
+  const parsed = PostValidation.updatePostSchema.safeParse(req.body);
   if (!parsed.success) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -359,9 +367,21 @@ const updatePost = async (id: string, payload: any, session: any) => {
     );
   }
 
+  const { removeImage, ...fields } = parsed.data;
+  const data: any = { ...fields };
+
+  if (req.file) {
+    const filename = await optimizeAndSaveImage(req.file, "posts");
+    data.image = `/uploads/posts/${filename}`;
+    await removeImageFile(existing.image);
+  } else if (removeImage) {
+    data.image = null;
+    await removeImageFile(existing.image);
+  }
+
   const updated = await prisma.post.update({
     where: { id },
-    data: parsed.data,
+    data,
   });
 
   return getPostById(updated.id, session);
@@ -379,6 +399,7 @@ const deletePost = async (id: string, session: any) => {
   }
 
   await prisma.post.delete({ where: { id } });
+  await removeImageFile(existing.image);
   return { message: "Post deleted successfully" };
 };
 

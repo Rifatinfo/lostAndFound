@@ -88,8 +88,38 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    let cancelled = false;
+    const load = async () => {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        if (cancelled) return;
+        try {
+          const { data } = await apiClient.get<SessionUser>("/api/v1/auth/me");
+          if (cancelled) return;
+          setUser({
+            ...data,
+            avatar: toAssetUrl(data.avatar),
+            coverPhoto: toAssetUrl(data.coverPhoto),
+          });
+          setError(null);
+          setIsLoading(false);
+          return;
+        } catch (err) {
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
+          } else {
+            if (cancelled) return;
+            setUser(null);
+            setError(err instanceof Error ? err.message : "Could not load your profile");
+            setIsLoading(false);
+          }
+        }
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateUser = useCallback((patch: Partial<SessionUser>) => {
     setUser((prev) => (prev ? { ...prev, ...patch } : prev));

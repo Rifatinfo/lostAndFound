@@ -50,3 +50,13 @@ export interface NewPostDraft {
   imageFile?: File
   reward?: string
 }
+
+export interface PostUpdateDraft {
+  itemName: string
+  category: string
+  location: string
+  body: string
+  imageFile?: File | null
+  removeImage?: boolean
+  reward?: string
+}

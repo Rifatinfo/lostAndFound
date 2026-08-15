@@ -13,8 +13,8 @@ import { useCurrentUser } from '../../providers/SessionProvider';
 
 
 export function CreatePostModal() {
-  const { isOpen, initialKind, closeComposer } = useComposer()
-  const { addPost } = usePosts()
+  const { isOpen, initialKind, editingPost, closeComposer } = useComposer()
+  const { addPost, updatePost } = usePosts()
   const currentUser = useCurrentUser()
 
   const [kind, setKind] = useState<PostKind>(initialKind)
@@ -26,6 +26,7 @@ export function CreatePostModal() {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | undefined>(undefined)
   const [imageName, setImageName] = useState('')
+  const [removeImage, setRemoveImage] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,6 +38,7 @@ export function CreatePostModal() {
     setImagePreview(URL.createObjectURL(file))
     setImageFile(file)
     setImageName(file.name)
+    setRemoveImage(false)
   }
 
   const clearImage = () => {
@@ -44,26 +46,28 @@ export function CreatePostModal() {
     setImagePreview(undefined)
     setImageFile(null)
     setImageName('')
+    if (editingPost?.image) setRemoveImage(true)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   useEffect(() => {
     if (isOpen) {
-      setKind(initialKind)
-      setItemName('')
-      setCategory(categories[0])
-      setLocation('')
-      setBody('')
-      setReward('')
-      setImagePreview(undefined)
+      setKind(editingPost?.kind ?? initialKind)
+      setItemName(editingPost?.itemName ?? '')
+      setCategory(editingPost?.category ?? categories[0])
+      setLocation(editingPost?.location ?? '')
+      setBody(editingPost?.body ?? '')
+      setReward(editingPost?.reward ?? '')
+      setImagePreview(editingPost?.image)
       setImageFile(null)
       setImageName('')
+      setRemoveImage(false)
       setTouched(false)
       setSubmitting(false)
       setError(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
-  }, [initialKind, isOpen])
+  }, [editingPost, initialKind, isOpen])
 
   useEffect(() => {
     if (!isOpen) return
@@ -83,15 +87,27 @@ export function CreatePostModal() {
     setSubmitting(true)
     setError(null)
     try {
-      await addPost({
-        kind,
-        itemName: itemName.trim(),
-        category,
-        location: location.trim(),
-        body: body.trim(),
-        imageFile: imageFile ?? undefined,
-        reward: reward.trim() ? reward.trim() : undefined,
-      })
+      if (editingPost) {
+        await updatePost(editingPost.id, {
+          itemName: itemName.trim(),
+          category,
+          location: location.trim(),
+          body: body.trim(),
+          imageFile: imageFile ?? undefined,
+          removeImage,
+          reward: reward.trim() ? reward.trim() : undefined,
+        })
+      } else {
+        await addPost({
+          kind,
+          itemName: itemName.trim(),
+          category,
+          location: location.trim(),
+          body: body.trim(),
+          imageFile: imageFile ?? undefined,
+          reward: reward.trim() ? reward.trim() : undefined,
+        })
+      }
       closeComposer()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not post. Try again.')
@@ -124,7 +140,7 @@ export function CreatePostModal() {
           >
             <header className="relative border-b border-slate-200 px-4 py-3">
               <h2 id="create-post-title" className="text-center text-lg font-bold text-slate-900">
-                Create post
+                {editingPost ? 'Edit post' : 'Create post'}
               </h2>
               <button
                 type="button"
@@ -156,12 +172,13 @@ export function CreatePostModal() {
                     type="button"
                     role="radio"
                     aria-checked={kind === option}
+                    disabled={Boolean(editingPost)}
                     onClick={() => setKind(option)}
                     className={`rounded-md py-2 text-sm font-semibold transition-colors duration-150 ease-out ${
                       kind === option
                         ? 'bg-white text-slate-900 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
-                    }`}
+                    } ${editingPost ? 'cursor-not-allowed opacity-60' : ''}`}
                   >
                     {option === 'lost' ? 'I lost something' : 'I found something'}
                   </button>
@@ -312,7 +329,7 @@ export function CreatePostModal() {
                 disabled={submitting}
                 className="mt-4 h-11 w-full rounded-lg bg-teal-600 text-[15px] font-semibold text-white transition-colors duration-150 ease-out hover:bg-teal-700 disabled:bg-teal-600/60"
               >
-                {submitting ? 'Posting…' : 'Post'}
+                {submitting ? (editingPost ? 'Saving…' : 'Posting…') : editingPost ? 'Save changes' : 'Post'}
               </button>
             </form>
           </motion.div>

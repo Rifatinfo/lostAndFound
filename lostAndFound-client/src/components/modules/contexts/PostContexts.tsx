@@ -1,11 +1,13 @@
 "use client";
 
-import { Comment, NewPostDraft, Post } from "@/types/post";
+import { Comment, NewPostDraft, Post, PostUpdateDraft } from "@/types/post";
 import { apiClient, toAssetUrl } from "@/lib/api-client";
+import { useSession } from "@/components/providers/SessionProvider";
 import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -21,6 +23,8 @@ interface PostsContextValue {
   loadMore: () => void;
   retry: () => void;
   addPost: (draft: NewPostDraft) => Promise<void>;
+  updatePost: (id: string, draft: PostUpdateDraft) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
   toggleHelpful: (id: string) => Promise<void>;
   toggleSave: (id: string) => Promise<void>;
   markReunited: (id: string) => Promise<void>;
@@ -61,12 +65,14 @@ export function countComments(comments: Comment[]): number {
 const PostsContext = createContext<PostsContextValue | null>(null);
 
 export function PostsProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useSession();
   const [posts, setPosts] = useState<Post[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inFlight = useRef(false);
+  const seenUserId = useRef<string | null>(null);
 
   const hasMore = posts.length < total;
 
@@ -94,6 +100,19 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
     if (isLoadingMore || error || !hasMore) return;
     void fetchPage(page + 1);
   }, [error, fetchPage, hasMore, isLoadingMore, page]);
+
+  const userId = user?.id ?? null;
+  useEffect(() => {
+    if (seenUserId.current === userId) return;
+    seenUserId.current = userId;
+    setPosts([]);
+    setTotal(0);
+    setPage(1);
+    setError(null);
+    if (userId) {
+      queueMicrotask(() => void fetchPage(1));
+    }
+  }, [fetchPage, userId]);
 
   const retry = useCallback(() => {
     void fetchPage(page);
@@ -124,6 +143,39 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
     setPosts((prev) => [normalizePost(result.data), ...prev]);
     setTotal((prev) => prev + 1);
   }, []);
+
+  const updatePost = useCallback(
+    async (id: string, draft: PostUpdateDraft) => {
+      const formData = new FormData();
+      formData.append(
+        "data",
+        JSON.stringify({
+          itemName: draft.itemName,
+          category: draft.category,
+          location: draft.location,
+          body: draft.body,
+          reward: draft.reward || null,
+          removeImage: draft.removeImage || false,
+        }),
+      );
+      if (draft.imageFile) {
+        formData.append("image", draft.imageFile);
+      }
+
+      const result = await apiClient.patchForm<Post>(`/api/v1/posts/${id}`, formData);
+      update(id, () => normalizePost(result.data));
+    },
+    [update],
+  );
+
+  const deletePost = useCallback(
+    async (id: string) => {
+      await apiClient.delete<{ message: string }>(`/api/v1/posts/${id}`);
+      setPosts((prev) => prev.filter((post) => post.id !== id));
+      setTotal((prev) => Math.max(prev - 1, 0));
+    },
+    [],
+  );
 
   const toggleHelpful = useCallback(
     async (id: string) => {
@@ -240,6 +292,8 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
       loadMore,
       retry,
       addPost,
+      updatePost,
+      deletePost,
       toggleHelpful,
       toggleSave,
       markReunited,
@@ -249,6 +303,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
     [
       addComment,
       addPost,
+      deletePost,
       error,
       hasMore,
       isLoadingMore,
@@ -259,6 +314,7 @@ export function PostsProvider({ children }: { children: React.ReactNode }) {
       toggleCommentLike,
       toggleHelpful,
       toggleSave,
+      updatePost,
     ],
   );
 

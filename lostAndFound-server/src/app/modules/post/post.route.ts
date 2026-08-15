@@ -25,6 +25,17 @@ const parsePostData = (req: express.Request, _res: express.Response, next: expre
   }
 };
 
+const parseUpdateData = (req: express.Request, _res: express.Response, next: express.NextFunction) => {
+  try {
+    if (typeof req.body?.data === "string") {
+      req.body = PostValidation.updatePostSchema.parse(JSON.parse(req.body.data));
+    }
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 router.get("/", requiredRoles, PostController.getAllPosts);
 
 router.post(
@@ -37,7 +48,13 @@ router.post(
 
 router.get("/:id", requiredRoles, PostController.getPostById);
 
-router.patch("/:id", requiredRoles, PostController.updatePost);
+router.patch(
+  "/:id",
+  requiredRoles,
+  fileUploader.singleUpload("image"),
+  parseUpdateData,
+  PostController.updatePost,
+);
 
 router.delete("/:id", requiredRoles, PostController.deletePost);
 

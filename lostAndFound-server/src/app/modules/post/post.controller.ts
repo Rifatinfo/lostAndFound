@@ -41,7 +41,7 @@ const createPost = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updatePost = catchAsync(async (req: Request, res: Response) => {
-  const result = await PostService.updatePost(req.params.id, req.body, req.user);
+  const result = await PostService.updatePost(req.params.id, req);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
