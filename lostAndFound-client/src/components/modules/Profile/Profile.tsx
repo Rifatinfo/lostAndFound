@@ -83,8 +83,8 @@ export function Profile() {
                 </button>
               </div>
 
-              <div className="pb-2">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              <div className="pb-2 mt-18  md:mt-0">
+                <h1 className="md:text-2xl text-[14px] font-bold tracking-tight text-slate-900">
                   {profile.name}
                 </h1>
                 <p className="text-sm text-slate-600">{profile.bio}</p>
@@ -94,7 +94,7 @@ export function Profile() {
             <button
               type="button"
               onClick={() => openComposer("lost")}
-              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-teal-700 sm:mb-2"
+              className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-teal-700 sm:mb-2 mt-4 md:mt-0"
             >
               <PlusIcon className="h-4 w-4" />
               New report
