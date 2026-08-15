@@ -4,6 +4,7 @@ import sendResponse from "../../../shared/sendResponse";
 import { StatusCodes } from "http-status-codes";
 import { PostService } from "./post.service";
 import pick from "../../../shared/pick";
+import prisma from "../../../shared/prisma";
 
 const getAllPosts = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, ["page", "limit", "kind", "status", "mine", "saved"]);
@@ -117,6 +118,22 @@ const deleteComment = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getNotifications = catchAsync(async (req: Request, res: Response) => {
+  const userId = (req.user as any).id;
+
+  const notifications = await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Notifications retrieved successfully!",
+    data: notifications,
+  });
+});
+
 export const PostController = {
   getAllPosts,
   getPostById,
@@ -128,4 +145,5 @@ export const PostController = {
   createComment,
   toggleCommentLike,
   deleteComment,
+  getNotifications,
 };

@@ -18,6 +18,7 @@ import { NavLink } from './NavLink';
 import { Avatar } from '../Avatar';
 import { useCurrentUser, useSession } from '../../providers/SessionProvider';
 import { logoutUser } from '@/services/auth/logoutUser';
+import { apiClient } from '@/lib/api-client';
 
 
 const tabs = [
@@ -37,6 +38,24 @@ export function Header({ onOpenMenu }: HeaderProps) {
   const { user, isLoading } = useSession()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
+  const [notificationCount, setNotificationCount] = useState(0)
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      if (!user?.id) return
+      try {
+        const result = await apiClient.get<{ count: number }>(`/api/v1/posts/notifications?userId=${user.id}`)
+        setNotificationCount(result.data.count || 0)
+      } catch (err) {
+        setNotificationCount(0)
+      }
+    }
+
+    fetchNotificationCount()
+
+    const interval = setInterval(fetchNotificationCount, 30000)
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   useEffect(() => {
     if (!menuOpen) return
@@ -126,11 +145,11 @@ export function Header({ onOpenMenu }: HeaderProps) {
           <button
             type="button"
             className="relative grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-slate-700 transition-colors hover:bg-slate-200"
-            aria-label="Notifications, 3 unread"
+            aria-label={`Notifications, ${notificationCount} unread`}
           >
             <BellIcon className="h-5 w-5" />
             <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-rose-600 px-1 text-[11px] font-semibold text-white">
-              3
+              {notificationCount}
             </span>
           </button>
           <div ref={menuRef} className="relative">

@@ -64,6 +64,8 @@ router.post("/:id/save", requiredRoles, PostController.toggleSave);
 
 router.post("/:id/comments", requiredRoles, PostController.createComment);
 
+router.get("/notifications", requiredRoles, PostController.getNotifications);
+
 router.post("/comments/:commentId/like", requiredRoles, PostController.toggleCommentLike);
 
 router.delete("/comments/:commentId", requiredRoles, PostController.deleteComment);

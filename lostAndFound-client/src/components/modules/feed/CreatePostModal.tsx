@@ -6,7 +6,7 @@ import { ImagePlusIcon, MapPinIcon, XIcon } from 'lucide-react'
 import { useComposer } from '../contexts/ComposerProvider';
 import { usePosts } from '../contexts/PostContexts';
 import { Avatar } from '../Avatar';
-import { categories } from '../data/categoru';
+import { categories } from '../data/categories';
 import { locations } from '../data/constants';
 import { PostKind } from '@/types/post';
 import { useCurrentUser } from '../../providers/SessionProvider';
@@ -199,17 +199,21 @@ export function CreatePostModal() {
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="text-sm font-medium text-slate-700">Category</span>
-                  <select
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    className="mt-1 h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-[15px] text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                  >
+                  <span className="relative mt-1 flex items-center">
+                    <MapPinIcon className="pointer-events-none absolute left-3 h-4 w-4 text-slate-400" />
+                    <input
+                      list="composer-categories"
+                      value={category}
+                      onChange={(event) => setCategory(event.target.value)}
+                      placeholder="Select category"
+                      className="h-10 w-full rounded-lg border border-slate-300 pl-9 pr-3 text-[15px] text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    />
+                  </span>
+                  <datalist id="composer-categories">
                     {categories.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
+                      <option key={option} value={option} />
                     ))}
-                  </select>
+                  </datalist>
                 </label>
 
                 <label className="block">

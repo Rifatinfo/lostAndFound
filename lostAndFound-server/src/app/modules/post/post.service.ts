@@ -486,6 +486,14 @@ const createComment = async (postId: string, payload: any, session: any) => {
     },
   });
 
+  // Create notification for post author if commenter is not the post author
+  if (post.authorId !== me.id) {
+    await prisma.$executeRaw`
+      INSERT INTO "notifications" ("id", "userId", "postId", "title", "message", "read", "createdAt")
+      VALUES (gen_random_uuid(), ${post.authorId}, ${postId}, 'New comment', 'Someone commented on your post', false, CURRENT_TIMESTAMP)
+    `;
+  }
+
   return {
     id: comment.id,
     author: { ...mapAuthor(comment.author), isSelf: true },
