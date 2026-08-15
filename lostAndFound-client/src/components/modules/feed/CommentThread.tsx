@@ -5,6 +5,9 @@ import { formatDistanceToNowStrict } from 'date-fns'
 import { ThumbsUpIcon } from 'lucide-react'
 
 import { CommentComposer } from './CommentComposer'
+import { Avatar } from '../Avatar'
+import { usePosts } from '../contexts/PostContexts'
+import { Comment } from '@/types/post'
 
 interface CommentThreadProps {
   postId: string

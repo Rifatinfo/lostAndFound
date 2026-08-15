@@ -10,6 +10,11 @@ import {
   UserRoundIcon,
 } from 'lucide-react'
 
+import { NavLink } from './NavLink';
+import { Avatar } from '../Avatar';
+import { useCurrentUser } from '../../providers/SessionProvider';
+import { navItems, shortcuts } from '../data/navigation';
+
 
 const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   home: HomeIcon,
@@ -25,6 +30,7 @@ interface SidebarNavProps {
 }
 
 export function SidebarNav({ onNavigate }: SidebarNavProps) {
+  const currentUser = useCurrentUser()
   return (
     <nav aria-label="Sections" className="pb-8">
       <NavLink

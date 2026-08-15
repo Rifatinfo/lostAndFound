@@ -1,0 +1,88 @@
+model Post {
+    id         String     @id @default(uuid())
+    authorId   String
+    kind       PostKind
+    status     PostStatus @default(OPEN)
+    itemName   String
+    category   String
+    location   String
+    body       String
+    image      String?
+    reward     String?
+    author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+    comments     Comment[] @relation("PostComments")
+    helpfulLikes HelpfulLike[]
+    saves        Save[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([authorId])
+    @@index([kind, status])
+    @@map("posts")
+}
+
+model Comment {
+    id        String  @id @default(uuid())
+    postId    String
+    authorId  String
+    parentId  String?
+    body      String
+
+    post    Post @relation("PostComments", fields: [postId], references: [id], onDelete: Cascade)
+    author  User @relation("AuthorComments", fields: [authorId], references: [id], onDelete: Cascade)
+    parent  Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+    replies Comment[] @relation("CommentReplies")
+
+    likes CommentLike[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([postId])
+    @@index([parentId])
+    @@map("comments")
+}
+
+model HelpfulLike {
+    id     String @id @default(uuid())
+    postId String
+    userId String
+
+    post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@unique([postId, userId])
+    @@map("helpful_likes")
+}
+
+model Save {
+    id     String @id @default(uuid())
+    postId String
+    userId String
+
+    post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@unique([postId, userId])
+    @@map("saves")
+}
+
+model CommentLike {
+    id        String @id @default(uuid())
+    commentId String
+    userId    String
+
+    comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt DateTime @default(now())
+
+    @@unique([commentId, userId])
+    @@map("comment_likes")
+}

@@ -6,7 +6,7 @@ import { LoginForm } from '@/components/modules/auth/LoginForm'
 import { Toast } from '@/components/shared/Toast/Toast'
 
 const LOGIN_HERO_IMAGE =
-  '/assets/login-image.png'
+  '/assets/register.png'
 
 export function LoginLayout() {
   const router = useRouter()

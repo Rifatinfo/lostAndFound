@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { XIcon } from 'lucide-react'
 
 import { CreatePostModal } from '../feed/CreatePostModal'
+import { Header } from './Header'
+import { SidebarNav } from './SidebarNav'
+import { RightRail } from './RightRail'
 
 interface AppShellProps {
   children: React.ReactNode

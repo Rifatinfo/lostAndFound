@@ -4,12 +4,18 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ImagePlusIcon, MapPinIcon, XIcon } from 'lucide-react'
 import { useComposer } from '../contexts/ComposerProvider';
+import { usePosts } from '../contexts/PostContexts';
+import { Avatar } from '../Avatar';
+import { categories } from '../data/categoru';
+import { locations } from '../data/constants';
 import { PostKind } from '@/types/post';
+import { useCurrentUser } from '../../providers/SessionProvider';
 
 
 export function CreatePostModal() {
   const { isOpen, initialKind, closeComposer } = useComposer()
   const { addPost } = usePosts()
+  const currentUser = useCurrentUser()
 
   const [kind, setKind] = useState<PostKind>(initialKind)
   const [itemName, setItemName] = useState('')
@@ -17,21 +23,26 @@ export function CreatePostModal() {
   const [location, setLocation] = useState('')
   const [body, setBody] = useState('')
   const [reward, setReward] = useState('')
-  const [image, setImage] = useState<string | undefined>(undefined)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | undefined>(undefined)
   const [imageName, setImageName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const pickFile = (file: File | undefined) => {
     if (!file || !file.type.startsWith('image/')) return
-    setImage(URL.createObjectURL(file))
+    if (imagePreview?.startsWith('blob:')) URL.revokeObjectURL(imagePreview)
+    setImagePreview(URL.createObjectURL(file))
+    setImageFile(file)
     setImageName(file.name)
   }
 
   const clearImage = () => {
-    if (image?.startsWith('blob:')) URL.revokeObjectURL(image)
-    setImage(undefined)
+    if (imagePreview?.startsWith('blob:')) URL.revokeObjectURL(imagePreview)
+    setImagePreview(undefined)
+    setImageFile(null)
     setImageName('')
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -44,10 +55,12 @@ export function CreatePostModal() {
       setLocation('')
       setBody('')
       setReward('')
-      setImage(undefined)
+      setImagePreview(undefined)
+      setImageFile(null)
       setImageName('')
       setTouched(false)
       setSubmitting(false)
+      setError(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }, [initialKind, isOpen])
@@ -63,24 +76,28 @@ export function CreatePostModal() {
 
   const missing = !itemName.trim() || !body.trim() || !location.trim()
 
-  const submit = (event: React.FormEvent) => {
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     setTouched(true)
     if (missing || submitting) return
     setSubmitting(true)
-    window.setTimeout(() => {
-      addPost({
+    setError(null)
+    try {
+      await addPost({
         kind,
         itemName: itemName.trim(),
         category,
         location: location.trim(),
         body: body.trim(),
-        image,
+        imageFile: imageFile ?? undefined,
         reward: reward.trim() ? reward.trim() : undefined,
       })
-      setSubmitting(false)
       closeComposer()
-    }, 600)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not post. Try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -235,9 +252,9 @@ export function CreatePostModal() {
                   onChange={(event) => pickFile(event.target.files?.[0])}
                 />
 
-                {image ? (
+                {imagePreview ? (
                   <div className="relative mt-2 overflow-hidden rounded-lg border border-slate-200">
-                    <img src={image} alt="Uploaded preview" className="max-h-64 w-full object-cover" />
+                    <img src={imagePreview} alt="Uploaded preview" className="max-h-64 w-full object-cover" />
                     <div className="flex items-center justify-between gap-2 bg-slate-50 px-3 py-2">
                       <span className="truncate text-xs text-slate-600">{imageName}</span>
                       <div className="flex shrink-0 gap-2">
@@ -281,6 +298,12 @@ export function CreatePostModal() {
               {touched && missing && (
                 <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
                   Add the item, where it happened, and a short description before posting.
+                </p>
+              )}
+
+              {error && (
+                <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                  {error}
                 </p>
               )}
 

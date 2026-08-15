@@ -13,7 +13,8 @@ const sizes = {
   sm: 'h-8 w-8 text-[11px]',
   md: 'h-10 w-10 text-xs',
   lg: 'h-11 w-11 text-sm',
-  xl: 'h-[168px] w-[168px] text-4xl',
+  // xl: 'h-[168px] w-[268px] text-4xl',
+  xl: 'h-[120px] w-[298px] text-3xl sm:h-[168px] sm:w-[268px] sm:text-4xl',
 }
 
 export function Avatar({ author, size = 'md', className = '' }: AvatarProps) {

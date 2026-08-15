@@ -1,5 +1,6 @@
 "use client";
 import { CheckCircle2Icon, MoreHorizontalIcon } from 'lucide-react'
+import { promos, recentMatches } from '../data/rightRail';
 
 
 function timeLabel(minutes: number): string {
@@ -28,11 +29,13 @@ export function RightRail() {
               href="#"
               className="flex gap-3 rounded-lg p-2 transition-colors hover:bg-slate-200/70"
             >
-              <img
-                src={promo.image}
-                alt=""
-                className="h-[110px] w-[110px] shrink-0 rounded-lg object-cover"
-              />
+              {promo.image && (
+                <img
+                  src={promo.image}
+                  alt=""
+                  className="h-[110px] w-[110px] shrink-0 rounded-lg object-cover"
+                />
+              )}
               <span className="min-w-0 self-center">
                 <span className="block text-sm font-medium leading-snug text-slate-900">
                   {promo.title}

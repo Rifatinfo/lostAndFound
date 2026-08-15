@@ -3,6 +3,7 @@ import express from "express";
 import { authRateLimiter } from "../middlewares/rateLimiter";
 import { AuthRoutes } from "../modules/auth/auth.route";
 import { UserRoutes } from "../modules/user/user.route";
+import { PostRoutes } from "../modules/post/post.route";
 
 
 
@@ -17,6 +18,10 @@ const moduleRoutes = [
     path: "/auth",
     route: AuthRoutes,
     // middlewares: [authRateLimiter], // Apply only here
+  },
+  {
+    path: "/posts",
+    route: PostRoutes,
   }
 ];
 

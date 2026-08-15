@@ -4,10 +4,12 @@ import React from 'react'
 import { ImageIcon, MapPinIcon, PackageSearchIcon, SearchIcon } from 'lucide-react'
 import { useComposer } from '../contexts/ComposerProvider';
 import { Avatar } from '../Avatar';
+import { useCurrentUser } from '../../providers/SessionProvider';
 
 
 export function ComposerTrigger() {
   const { openComposer } = useComposer()
+  const currentUser = useCurrentUser()
 
   return (
     <section aria-label="Create a post" className="rounded-lg border border-slate-200 bg-white p-3">

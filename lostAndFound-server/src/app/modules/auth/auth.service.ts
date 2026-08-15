@@ -56,13 +56,13 @@ const login = async (payload: { email: string; password: string }) => {
   const refreshTokenExpiresIn = envVars.REFRESH_TOKEN_EXPIRES_IN as string;
 
   const accessToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role },
     envVars.JWT_SECRET as Secret,
     accessTokenExpiresIn,
   );
 
   const refreshToken = jwtHelper.generateToken(
-    { email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role },
     envVars.REFRESH_TOKEN_SECRET as Secret,
     refreshTokenExpiresIn,
   );
@@ -102,6 +102,7 @@ const refreshToken = async (token: string) => {
 
   const accessToken = jwtHelper.generateToken(
     {
+      id: userData.id,
       email: userData.email,
       role: userData.role,
     },
@@ -124,12 +125,10 @@ const getMe = async (session: any) => {
     include: {
       admin: true,
       customer: true,
-      shopManager: true,
-      mediaManager: true,
     },
   });
 
-  const { id, email, role, needPasswordChange, status, admin, customer, shopManager, mediaManager } = userData;
+  const { id, email, role, needPasswordChange, status, admin, customer } = userData;
 
   return {
     id,
@@ -137,11 +136,13 @@ const getMe = async (session: any) => {
     role,
     needPasswordChange,
     status,
-    name: userData.name || admin?.name || customer?.name || shopManager?.name || mediaManager?.name,
+    name: userData.name || admin?.name || customer?.name,
+    avatar: userData.avatar,
+    coverPhoto: userData.coverPhoto,
+    bio: userData.bio,
+    phone: userData.phone,
     admin,
     customer,
-    shopManager,
-    mediaManager,
   };
 };
 

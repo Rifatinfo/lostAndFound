@@ -9,6 +9,9 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import { useComposer } from '../contexts/ComposerProvider';
+import { NavLink } from './NavLink';
+import { Avatar } from '../Avatar';
+import { useCurrentUser } from '../../providers/SessionProvider';
 
 
 const tabs = [
@@ -24,6 +27,7 @@ interface HeaderProps {
 
 export function Header({ onOpenMenu }: HeaderProps) {
   const { openComposer } = useComposer()
+  const currentUser = useCurrentUser()
 
   return (
     <header className="fixed inset-x-0 top-0 z-30 h-14 border-b border-slate-200 bg-white">

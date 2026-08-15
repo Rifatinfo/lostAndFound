@@ -14,10 +14,8 @@ export const commonProtectedRoutes: RouteConfig = {
 }
 
 export const customerProtectedRoutes: RouteConfig = {
-    exact: ["/", "/my-profile", ],
-    patterns: [
-    /^\/order-tracking\/.*$/,   //  allow dynamic orderId
-  ],
+    exact: ["/", "/profile", "/lost", "/found", "/reunited", "/saved"],
+    patterns: [],
 }
 
 export const adminProtectedRoutes: RouteConfig = {
@@ -62,12 +60,6 @@ export const getRouteOwner = (pathname: string): "ADMIN" | "CUSTOMER" | "COMMON"
 
 
 export const getDefaultDashboardRoute = (role: UserRole): string => {
-    if (role === "ADMIN") {
-        return "/admin"
-    }
-    if (role === "CUSTOMER") {
-        return "/"
-    }
     return "/"
 }
 

@@ -1,6 +1,5 @@
 import app from "./app";
 import { envVars } from "./config";
-import { startRestoreStockCron } from "./cron/restoreStock.cron";
 import { Server } from "http";
 
 const PORT = envVars.PORT;
@@ -20,7 +19,6 @@ async function bootstrap() {
     // Start the server
     server = app.listen(envVars.PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${envVars.PORT}`);
-      startRestoreStockCron();
     });
 
     // Function to gracefully shut down the server

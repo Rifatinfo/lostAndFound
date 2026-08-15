@@ -135,8 +135,7 @@ const getAllFromDB = async (params: any, options: IOptions) => {
 }
 
 
-const createAdmin = async (req: Request & { file?: Express.Multer.File }) => {
-    const { name, email, password, phone } = req.body;
+const createAdmin = async (req: Request & { file?: Express.Multer.File }) => {    const { name, email, password, phone } = req.body;
 
     // ===== Generate slug =====
     const slug = name ? await generateUserSlug(name.trim()) : `user-${crypto.randomBytes(6).toString("hex")}`;
@@ -185,8 +184,80 @@ const createAdmin = async (req: Request & { file?: Express.Multer.File }) => {
 };
 
 
+const updateMe = async (session: any, payload: any) => {
+  const me = await prisma.user.findUniqueOrThrow({
+    where: { email: session.email, status: "ACTIVE" as any },
+  });
+
+  const data: any = {};
+  if (typeof payload.name === "string") data.name = payload.name.trim();
+  if (typeof payload.bio === "string") data.bio = payload.bio.trim();
+  if (typeof payload.phone === "string") data.phone = payload.phone.trim();
+  if (typeof payload.avatar === "string") data.avatar = payload.avatar;
+
+  const updated = await prisma.user.update({
+    where: { id: me.id },
+    data,
+  });
+
+  return {
+    id: updated.id,
+    name: updated.name,
+    email: updated.email,
+    avatar: updated.avatar,
+    coverPhoto: updated.coverPhoto,
+    bio: updated.bio,
+    phone: updated.phone,
+    role: updated.role,
+  };
+};
+
+const updateAvatar = async (session: any, file?: Express.Multer.File) => {
+  const me = await prisma.user.findUniqueOrThrow({
+    where: { email: session.email },
+  });
+
+  let avatarUrl = me.avatar;
+  if (file) {
+    const folder = `users/${me.slug || me.id}`;
+    const filename = await optimizeAndSaveImage(file, folder);
+    avatarUrl = `/uploads/${folder}/${filename}`;
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: me.id }, data: { avatar: avatarUrl } }),
+    prisma.customer.updateMany({ where: { userId: me.id }, data: { avatar: avatarUrl } }),
+  ]);
+
+  return { avatar: avatarUrl };
+};
+
+const updateCover = async (session: any, file?: Express.Multer.File) => {
+  const me = await prisma.user.findUniqueOrThrow({
+    where: { email: session.email },
+  });
+
+  if (!file) {
+    throw new Error("Cover photo is required");
+  }
+
+  const folder = `users/${me.slug || me.id}/cover`;
+  const filename = await optimizeAndSaveImage(file, folder);
+  const coverUrl = `/uploads/${folder}/${filename}`;
+
+  await prisma.user.update({
+    where: { id: me.id },
+    data: { coverPhoto: coverUrl },
+  });
+
+  return { coverPhoto: coverUrl };
+};
+
 export const UserService = {
     createCustomer,
     getAllFromDB,
     createAdmin,
+    updateMe,
+    updateAvatar,
+    updateCover,
 };

@@ -1,14 +1,12 @@
 
-import { Header } from "@/components/shared/navbar/Header";
+import { AppShell } from "@/components/modules/layout/AppShell";
 import { LoginToastProvider } from "@/components/modules/auth/LoginToastProvider";
 
 const CommonLayout = ({ children }: { children: React.ReactNode }) => {
-
     return (
         <>
             <LoginToastProvider />
-            <Header/>
-            {children}
+            <AppShell>{children}</AppShell>
         </>
     );
 };

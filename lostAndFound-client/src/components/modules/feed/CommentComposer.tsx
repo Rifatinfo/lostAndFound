@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import { SendIcon } from 'lucide-react'
+import { Avatar } from '../Avatar'
+import { useCurrentUser } from '../../providers/SessionProvider';
 
 
 interface CommentComposerProps {
@@ -18,6 +20,7 @@ export function CommentComposer({
   onCancel,
 }: CommentComposerProps) {
   const [draft, setDraft] = useState('')
+  const currentUser = useCurrentUser()
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()

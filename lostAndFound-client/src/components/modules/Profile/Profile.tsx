@@ -1,27 +1,27 @@
 "use client";
-import  { useRef } from 'react'
-import { CameraIcon, PlusIcon } from 'lucide-react'
-import { usePosts } from '../contexts/PostContexts';
-import { useProfile } from '../contexts/ProfileProvider';
-import { useComposer } from '../contexts/ComposerProvider';
-
+import { useRef } from "react";
+import { CameraIcon, PlusIcon } from "lucide-react";
+import { usePosts } from "../contexts/PostContexts";
+import { useProfile } from "../contexts/ProfileProvider";
+import { useComposer } from "../contexts/ComposerProvider";
+import { Avatar } from "../Avatar";
+import { ComposerTrigger } from "../feed/ComposerTrigger";
+import { Feed } from "../feed/Feed";
+import { useCurrentUser } from "../../providers/SessionProvider";
+import Image from "next/image";
 
 export function Profile() {
-  const { posts } = usePosts()
-  const { openComposer } = useComposer()
-  const { profile, setAvatarUrl, setCoverUrl } = useProfile()
+  const { posts } = usePosts();
+  const { openComposer } = useComposer();
+  const { profile, uploadAvatar, uploadCover } = useProfile();
+  const currentUser = useCurrentUser();
+  console.log("profile.coverUrl", profile.coverUrl);
+  const coverInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
-  const coverInputRef = useRef<HTMLInputElement | null>(null)
-  const avatarInputRef = useRef<HTMLInputElement | null>(null)
-
-  const mine = posts.filter((post) => post.isMine)
-  const reunited = mine.filter((post) => post.status === 'reunited').length
-  const helpful = mine.reduce((total, post) => total + post.helpfulCount, 0)
-
-  const readImage = (file: File | undefined, apply: (url: string) => void) => {
-    if (!file || !file.type.startsWith('image/')) return
-    apply(URL.createObjectURL(file))
-  }
+  const mine = posts.filter((post) => post.isMine);
+  const reunited = mine.filter((post) => post.status === "reunited").length;
+  const helpful = mine.reduce((total, post) => total + post.helpfulCount, 0);
 
   return (
     <div className="space-y-4">
@@ -32,12 +32,16 @@ export function Profile() {
             alt="Your cover photo"
             className="h-[200px] w-full bg-slate-200 object-cover sm:h-[240px]"
           />
+          
           <input
             ref={coverInputRef}
             type="file"
             accept="image/*"
             className="sr-only"
-            onChange={(event) => readImage(event.target.files?.[0], setCoverUrl)}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file?.type.startsWith("image/")) void uploadCover(file);
+            }}
           />
           <button
             type="button"
@@ -53,13 +57,21 @@ export function Profile() {
           <div className="-mt-[60px] flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-end gap-4">
               <div className="relative">
-                <Avatar author={currentUser} size="xl" className="ring-4 ring-white" />
+                <Avatar
+                  author={currentUser}
+                  size="xl"
+                  className="ring-4 ring-white"
+                />
                 <input
                   ref={avatarInputRef}
                   type="file"
                   accept="image/*"
                   className="sr-only"
-                  onChange={(event) => readImage(event.target.files?.[0], setAvatarUrl)}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file?.type.startsWith("image/"))
+                      void uploadAvatar(file);
+                  }}
                 />
                 <button
                   type="button"
@@ -72,14 +84,16 @@ export function Profile() {
               </div>
 
               <div className="pb-2">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">{profile.name}</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                  {profile.name}
+                </h1>
                 <p className="text-sm text-slate-600">{profile.bio}</p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => openComposer('lost')}
+              onClick={() => openComposer("lost")}
               className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-teal-600 px-3 text-sm font-semibold text-white transition-colors duration-150 ease-out hover:bg-teal-700 sm:mb-2"
             >
               <PlusIcon className="h-4 w-4" />
@@ -90,15 +104,21 @@ export function Profile() {
           <dl className="mt-4 flex gap-8 border-t border-slate-200 pt-3">
             <div>
               <dt className="text-xs text-slate-500">Reports</dt>
-              <dd className="text-lg font-semibold text-slate-900">{mine.length}</dd>
+              <dd className="text-lg font-semibold text-slate-900">
+                {mine.length}
+              </dd>
             </div>
             <div>
               <dt className="text-xs text-slate-500">Reunited</dt>
-              <dd className="text-lg font-semibold text-slate-900">{reunited}</dd>
+              <dd className="text-lg font-semibold text-slate-900">
+                {reunited}
+              </dd>
             </div>
             <div>
               <dt className="text-xs text-slate-500">Helpful votes</dt>
-              <dd className="text-lg font-semibold text-slate-900">{helpful}</dd>
+              <dd className="text-lg font-semibold text-slate-900">
+                {helpful}
+              </dd>
             </div>
           </dl>
         </div>
@@ -106,7 +126,9 @@ export function Profile() {
 
       <ComposerTrigger />
 
-      <h2 className="px-1 pt-1 text-[17px] font-semibold text-slate-900">Your posts</h2>
+      <h2 className="px-1 pt-1 text-[17px] font-semibold text-slate-900">
+        Your posts
+      </h2>
 
       <Feed
         posts={mine}
@@ -114,5 +136,5 @@ export function Profile() {
         emptyDescription="Report something you lost or found and it will show up here."
       />
     </div>
-  )
+  );
 }

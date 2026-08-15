@@ -14,6 +14,8 @@ export const optimizeAndSaveImage = async (
 ): Promise<string> => {
   const uploadDir = path.join(process.cwd(), "uploads", folder);
 
+  await ensureDir(uploadDir);
+
   const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
   const filepath = path.join(uploadDir, filename);
 

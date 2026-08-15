@@ -47,6 +47,6 @@ export interface NewPostDraft {
   category: string
   location: string
   body: string
-  image?: string
+  imageFile?: File
   reward?: string
 }

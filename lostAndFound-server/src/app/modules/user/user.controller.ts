@@ -45,8 +45,41 @@ const createAdmin = catchAsync(async (req: Request & { file?: Express.Multer.Fil
     });
 });
 
+const updateMe = catchAsync(async (req: Request, res: Response) => {
+    const result = await UserService.updateMe(req.user, req.body);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Profile updated successfully!",
+        data: result,
+    });
+});
+
+const updateAvatar = catchAsync(async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+    const result = await UserService.updateAvatar(req.user, req.file);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Profile photo updated successfully!",
+        data: result,
+    });
+});
+
+const updateCover = catchAsync(async (req: Request & { file?: Express.Multer.File }, res: Response) => {
+    const result = await UserService.updateCover(req.user, req.file);
+    sendResponse(res, {
+        statusCode: StatusCodes.OK,
+        success: true,
+        message: "Cover photo updated successfully!",
+        data: result,
+    });
+});
+
 export const UserController = {
     createCustomer,
     getAllFromDB,
     createAdmin,
+    updateMe,
+    updateAvatar,
+    updateCover,
 };

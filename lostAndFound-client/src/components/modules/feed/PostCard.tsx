@@ -15,6 +15,9 @@ import {
 import { CommentThread } from './CommentThread'
 import { CommentComposer } from './CommentComposer'
 import { usePosts } from '../contexts/PostContexts';
+import { Avatar } from '../Avatar';
+import { countComments } from '../contexts/PostContexts';
+import { Post } from '@/types/post';
 
 interface PostCardProps {
   post: Post

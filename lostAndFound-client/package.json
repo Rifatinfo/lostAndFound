@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
+    "date-fns": "^4.4.0",
     "framer-motion": "^12.42.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.24.0",

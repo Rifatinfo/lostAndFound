@@ -58,4 +58,28 @@ router.post(
 
 router.get("/",   UserController.getAllFromDB);
 
+/* ===============================================
+ ====================== Profile ============
+ ============================================== */
+
+router.patch(
+    "/me",
+    auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SHOP_MANAGER, UserRole.MEDIA_MANAGER),
+    UserController.updateMe
+);
+
+router.patch(
+    "/me/avatar",
+    auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SHOP_MANAGER, UserRole.MEDIA_MANAGER),
+    fileUploader.singleUpload("file"),
+    UserController.updateAvatar
+);
+
+router.patch(
+    "/me/cover",
+    auth(UserRole.CUSTOMER, UserRole.ADMIN, UserRole.SHOP_MANAGER, UserRole.MEDIA_MANAGER),
+    fileUploader.singleUpload("file"),
+    UserController.updateCover
+);
+
 export const UserRoutes = router;

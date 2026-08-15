@@ -1,7 +1,18 @@
 "use client";
 
-import { CartProvider } from "@/contexts/CartContext";
+import { SessionProvider } from "./SessionProvider";
+import { ComposerProvider } from "@/components/modules/contexts/ComposerProvider";
+import { PostsProvider } from "@/components/modules/contexts/PostContexts";
+import { ProfileProvider } from "@/components/modules/contexts/ProfileProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return <CartProvider>{children}</CartProvider>;
+  return (
+    <SessionProvider>
+      <ProfileProvider>
+        <ComposerProvider>
+          <PostsProvider>{children}</PostsProvider>
+        </ComposerProvider>
+      </ProfileProvider>
+    </SessionProvider>
+  );
 }

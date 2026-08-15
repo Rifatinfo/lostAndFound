@@ -1,3 +1,5 @@
+"use client";
+
 import { usePosts } from "../contexts/PostContexts"
 import { Feed } from "../feed/Feed"
 import { PageHeading } from "../PageHeading"

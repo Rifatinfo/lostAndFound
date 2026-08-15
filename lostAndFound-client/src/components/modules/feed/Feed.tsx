@@ -5,6 +5,8 @@ import { AlertTriangleIcon, CheckCircle2Icon, InboxIcon } from 'lucide-react'
 import { Post } from '@/types/post';
 import { usePosts } from '../contexts/PostContexts';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
+import { PostCard } from './PostCard';
+import { PostSkeleton } from './PostSkeleton';
 
 
 interface FeedProps {

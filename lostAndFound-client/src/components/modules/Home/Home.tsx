@@ -1,3 +1,5 @@
+"use client";
+
 import { usePosts } from "../contexts/PostContexts"
 import { ComposerTrigger } from "../feed/ComposerTrigger"
 import { Feed } from "../feed/Feed"
