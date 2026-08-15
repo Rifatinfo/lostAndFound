@@ -1,0 +1,23 @@
+
+
+enum AuthType {
+  CREDENTIALS
+  GOOGLE
+}
+
+// ========= User Related ========//
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SHOP_MANAGER
+  MEDIA_MANAGER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+
